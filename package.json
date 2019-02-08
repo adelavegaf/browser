@@ -11,9 +11,11 @@
     "fix": "gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
-    "posttest": "npm run check"
+    "posttest": "npm run check",
+    "predeploy": "rm -rf build",
+    "deploy": "npm run compile && cp package.json ./build/src/package.json"
   },
-  "author": "",
+  "author": "Antonio de la Vega",
   "license": "MIT",
   "dependencies": {
     "express": "^4.16.4",
