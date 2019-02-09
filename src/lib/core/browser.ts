@@ -1,4 +1,4 @@
-import {MessagingService} from './messaging-service';
+import {MessagingService} from '../messaging/messaging-service';
 import {Webpage} from './webpage';
 
 enum Command {
