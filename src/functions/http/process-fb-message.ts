@@ -1,6 +1,9 @@
 import express = require('express');
+// @ts-ignore
+import PubSub = require('@google-cloud/pubsub');
 import {FBMessenger} from '../../lib/messaging/fbmessenger';
 import {MessagingService} from '../../lib/messaging/messaging-service';
+import {BROWSER_TOPIC} from '../pubsub/process-browser-message';
 
 
 export async function processFbMessage(
@@ -33,13 +36,19 @@ async function handleGET(req: express.Request, res: express.Response) {
 
 async function handlePOST(req: express.Request, res: express.Response) {
   try {
+    // @ts-ignore
+    const pubsub = new PubSub.PubSub();
     const messagingService: MessagingService =
         new FBMessenger(process.env.PAGE_TOKEN as string);
     const messages = messagingService.parseResponse(req.body);
-    for (const {id, text} of messages) {
-      console.info(`Processing message "${text}" for user ${id}`);
+    for (const message of messages) {
+      console.info(
+          `Processing message "${message.text}" for user ${message.id}`);
+      const dataBuffer = Buffer.from(JSON.stringify(message));
+      const messageId = await pubsub.topic(BROWSER_TOPIC).publish(dataBuffer);
+      console.info(
+          `Published message "${messageId}" to topic "${BROWSER_TOPIC}"`);
     }
-    // TODO(adelavega): Send messages through pub/sub to browser.
   } catch (err) {
     console.error(err);
   } finally {
