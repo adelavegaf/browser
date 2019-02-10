@@ -1,15 +1,8 @@
 import request = require('request-promise-native');
-import {Message, MessagingService} from './messaging-service';
+import {MessagingService} from './messaging-service';
 
 const GRAPH_URL = 'https://graph.facebook.com/v2.6/me/messages?access_token=';
 
-interface WebhookEvent {
-  object: string;
-  entry: Array<{
-    id: string; time: number;
-    messaging: Array<{sender: {id: string;}, message: {text: string;}}>;
-  }>;
-}
 
 export class FBMessenger implements MessagingService {
   private url: string;
@@ -41,23 +34,5 @@ export class FBMessenger implements MessagingService {
       }
     };
     return request.post({url: this.url, formData}).promise();
-  }
-
-  parseResponse(response: WebhookEvent): Message[] {
-    const messages: Message[] = [];
-    for (const entry of response['entry']) {
-      for (const messaging of entry['messaging']) {
-        if (messaging['message'] == null) {
-          continue;
-        }
-        const id = messaging['sender']['id'];
-        const text = messaging['message']['text'];
-        if (text == null) {
-          continue;
-        }
-        messages.push({id, text});
-      }
-    }
-    return messages;
   }
 }

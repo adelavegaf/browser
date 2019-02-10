@@ -1,6 +1,11 @@
+export enum Provider {
+  Messenger = 'Messenger'
+}
+
 export interface Message {
   id: string;
   text: string;
+  provider: Provider;
 }
 
 export interface MessagingService {
@@ -8,5 +13,4 @@ export interface MessagingService {
   sendFile(
       recipientId: string, filename: string, contentType: string,
       attachment: Buffer): Promise<{}>;
-  parseResponse(response: {}): Message[];
 }

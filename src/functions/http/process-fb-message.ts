@@ -1,10 +1,16 @@
 import express = require('express');
 // @ts-ignore
 import PubSub = require('@google-cloud/pubsub');
-import {FBMessenger} from '../../lib/messaging/fbmessenger';
-import {MessagingService} from '../../lib/messaging/messaging-service';
+import {Message, Provider} from '../../lib/messaging/messaging-service';
 import {BROWSER_TOPIC} from '../pubsub/process-browser-message';
 
+interface WebhookEvent {
+  object: string;
+  entry: Array<{
+    id: string; time: number;
+    messaging: Array<{sender: {id: string;}, message: {text: string;}}>;
+  }>;
+}
 
 export async function processFbMessage(
     req: express.Request, res: express.Response) {
@@ -38,9 +44,7 @@ async function handlePOST(req: express.Request, res: express.Response) {
   try {
     // @ts-ignore
     const pubsub = new PubSub.PubSub();
-    const messagingService: MessagingService =
-        new FBMessenger(process.env.PAGE_TOKEN as string);
-    const messages = messagingService.parseResponse(req.body);
+    const messages = parseResponse(req.body);
     for (const message of messages) {
       console.info(
           `Processing message "${message.text}" for user ${message.id}`);
@@ -54,4 +58,23 @@ async function handlePOST(req: express.Request, res: express.Response) {
   } finally {
     await res.status(200).send('success');
   }
+}
+
+function parseResponse(response: WebhookEvent): Message[] {
+  const messages: Message[] = [];
+  const provider = Provider.Messenger;
+  for (const entry of response['entry']) {
+    for (const messaging of entry['messaging']) {
+      if (messaging['message'] == null) {
+        continue;
+      }
+      const id = messaging['sender']['id'];
+      const text = messaging['message']['text'];
+      if (text == null) {
+        continue;
+      }
+      messages.push({id, text, provider});
+    }
+  }
+  return messages;
 }
