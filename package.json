@@ -12,8 +12,8 @@
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run check",
-    "predeploy": "rm -rf build",
-    "deploy": "npm run compile && cp package.json ./build/src/package.json"
+    "predeploy": "rm -rf build && npm run compile && cp package.json ./build/src/package.json",
+    "deploy": "gcloud functions deploy processFbMessage --runtime nodejs8  --trigger-http --source ./build/src --env-vars-file ./config/env.yaml && gcloud functions deploy processBrowserMessage --runtime nodejs8  --trigger-topic browser_topic --source ./build/src --env-vars-file ./config/env.yaml --memory 1024MB"
   },
   "author": "Antonio de la Vega",
   "license": "MIT",
